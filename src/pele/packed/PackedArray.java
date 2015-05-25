@@ -14,27 +14,9 @@ public abstract class PackedArray<CT> extends Packed {
     /**
      * Constructor for "zero" PackedArray(s)
      */
-    PackedArray(PackedClass<? extends PackedArray, CT> arrayType, int length) {
+    PackedArray(PackedClass<? extends PackedArray<CT>, ?> arrayType, int length) {
         super(arrayType.arraySize(checkLength(length)));
         this.length = length;
-    }
-
-    /**
-     * Factory for PackedArray views.
-     */
-    static <T, PA extends PackedArray<T>> PA newArrayView(PackedClass<PA, T> arrayType, byte[] target, int offset, int length) {
-        PA array = newView(arrayType, target, offset, arrayType.arraySize(length));
-        U.putOrderedInt(array, LENGTH, length);
-        return array;
-    }
-
-    /**
-     * Factory for PackedArray copies.
-     */
-    static <T, PA extends PackedArray<T>> PA newArrayCopy(PackedClass<PA, T> arrayType, byte[] target, int offset, int length) {
-        PA array = newCopy(arrayType, target, offset, arrayType.arraySize(length));
-        U.putOrderedInt(array, LENGTH, length);
-        return array;
     }
 
     /**
@@ -43,6 +25,12 @@ public abstract class PackedArray<CT> extends Packed {
     public final int length() {
         return length;
     }
+
+    /**
+     * @return the type of the packed array.
+     */
+    @Override
+    public abstract PackedClass<? extends PackedArray<CT>, ?> type();
 
     /**
      * Grabs and returns the element at given {@code index}.
@@ -89,6 +77,56 @@ public abstract class PackedArray<CT> extends Packed {
     public abstract void set(int index, CT value);
 
     /**
+     * Returns a view of this packed array's range.
+     * The initial index of the range - {@code from} - must lie between zero
+     * and {@link #length()}, inclusive. The final index of the range -
+     * {@code to} - must lie between {@code from} and {@link #length()}, inclusive.
+     * The length of the returned array will be {@code to - from}.
+     *
+     * @param from the initial index of the range, inclusive
+     * @param to   the final index of the range, exclusive.
+     * @return a packed array representing the view of the specified range
+     * of this packed array
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *                                        or {@code from > }{@link #length()}
+     *                                        or {@code to < 0}
+     *                                        or {@code to > }{@link #length()}
+     * @throws IllegalArgumentException       if {@code from > to}
+     */
+    public PackedArray<CT> viewOfRange(int from, int to) {
+        checkRangeIndexes(from, to);
+        int indexScale = type().getComponentType().getIndexScale();
+        int rangeOffset = offset + from * indexScale;
+        int rangeLength = to - from;
+        return newArrayView(type(), target, rangeOffset, rangeLength);
+    }
+
+    /**
+     * Returns a copy of this packed array's range.
+     * The initial index of the range - {@code from} - must lie between zero
+     * and {@link #length()}, inclusive. The final index of the range -
+     * {@code to} - must lie between {@code from} and {@link #length()}, inclusive.
+     * The length of the returned array will be {@code to - from}.
+     *
+     * @param from the initial index of the range to be copied, inclusive
+     * @param to   the final index of the range to be copied, exclusive.
+     * @return a packed array containing the copy of the specified range
+     * from this packed array
+     * @throws ArrayIndexOutOfBoundsException if {@code from < 0}
+     *                                        or {@code from > }{@link #length()}
+     *                                        or {@code to < 0}
+     *                                        or {@code to > }{@link #length()}
+     * @throws IllegalArgumentException       if {@code from > to}
+     */
+    public PackedArray<CT> copyOfRange(int from, int to) {
+        checkRangeIndexes(from, to);
+        int indexScale = type().getComponentType().getIndexScale();
+        int rangeOffset = offset + from * indexScale;
+        int rangeLength = to - from;
+        return newArrayCopy(type(), target, rangeOffset, rangeLength);
+    }
+
+    /**
      * Returns a {@code String} representation of the contents of the array.
      * The format is equivalent to what is returned by
      * {@link java.util.Arrays#toString} methods.
@@ -129,8 +167,20 @@ public abstract class PackedArray<CT> extends Packed {
         return index;
     }
 
+    void checkRangeIndexes(int from, int to) {
+        if (from < 0 || from > length()) {
+            throw new ArrayIndexOutOfBoundsException("'from' index out of range: " + from);
+        }
+        if (to < 0 || to > length()) {
+            throw new ArrayIndexOutOfBoundsException("'to' index out of range: " + to);
+        }
+        if (from > to) {
+            throw new IllegalArgumentException("'from' index: " + from + " > 'to' index: " + to);
+        }
+    }
+
     static abstract class OfPrimitive<CT> extends PackedArray<CT> {
-        OfPrimitive(PackedClass<? extends OfPrimitive, CT> arrayType, int length) {
+        OfPrimitive(PackedClass<? extends OfPrimitive<CT>, ?> arrayType, int length) {
             super(arrayType, length);
         }
     }
@@ -166,6 +216,16 @@ public abstract class PackedArray<CT> extends Packed {
         public void set(int index, Boolean value) {
             setBoolean(index, value);
         }
+
+        @Override
+        public OfBoolean viewOfRange(int from, int to) {
+            return (OfBoolean) super.viewOfRange(from, to);
+        }
+
+        @Override
+        public OfBoolean copyOfRange(int from, int to) {
+            return (OfBoolean) super.copyOfRange(from, to);
+        }
     }
 
     public static final class OfByte extends OfPrimitive<Byte> {
@@ -198,6 +258,16 @@ public abstract class PackedArray<CT> extends Packed {
         @Override
         public void set(int index, Byte value) {
             setByte(index, value);
+        }
+
+        @Override
+        public OfByte viewOfRange(int from, int to) {
+            return (OfByte) super.viewOfRange(from, to);
+        }
+
+        @Override
+        public OfByte copyOfRange(int from, int to) {
+            return (OfByte) super.copyOfRange(from, to);
         }
     }
 
@@ -232,6 +302,16 @@ public abstract class PackedArray<CT> extends Packed {
         public void set(int index, Character value) {
             setChar(index, value);
         }
+
+        @Override
+        public OfChar viewOfRange(int from, int to) {
+            return (OfChar) super.viewOfRange(from, to);
+        }
+
+        @Override
+        public OfChar copyOfRange(int from, int to) {
+            return (OfChar) super.copyOfRange(from, to);
+        }
     }
 
     public static final class OfShort extends OfPrimitive<Short> {
@@ -264,6 +344,16 @@ public abstract class PackedArray<CT> extends Packed {
         @Override
         public void set(int index, Short value) {
             setShort(index, value);
+        }
+
+        @Override
+        public OfShort viewOfRange(int from, int to) {
+            return (OfShort) super.viewOfRange(from, to);
+        }
+
+        @Override
+        public OfShort copyOfRange(int from, int to) {
+            return (OfShort) super.copyOfRange(from, to);
         }
     }
 
@@ -298,6 +388,16 @@ public abstract class PackedArray<CT> extends Packed {
         public void set(int index, Integer value) {
             setInt(index, value);
         }
+
+        @Override
+        public OfInt viewOfRange(int from, int to) {
+            return (OfInt) super.viewOfRange(from, to);
+        }
+
+        @Override
+        public OfInt copyOfRange(int from, int to) {
+            return (OfInt) super.copyOfRange(from, to);
+        }
     }
 
     public static final class OfLong extends OfPrimitive<Long> {
@@ -330,6 +430,16 @@ public abstract class PackedArray<CT> extends Packed {
         @Override
         public void set(int index, Long value) {
             setLong(index, value);
+        }
+
+        @Override
+        public OfLong viewOfRange(int from, int to) {
+            return (OfLong) super.viewOfRange(from, to);
+        }
+
+        @Override
+        public OfLong copyOfRange(int from, int to) {
+            return (OfLong) super.copyOfRange(from, to);
         }
     }
 
@@ -364,6 +474,16 @@ public abstract class PackedArray<CT> extends Packed {
         public void set(int index, Float value) {
             setFloat(index, value);
         }
+
+        @Override
+        public OfFloat viewOfRange(int from, int to) {
+            return (OfFloat) super.viewOfRange(from, to);
+        }
+
+        @Override
+        public OfFloat copyOfRange(int from, int to) {
+            return (OfFloat) super.copyOfRange(from, to);
+        }
     }
 
     public static final class OfDouble extends OfPrimitive<Double> {
@@ -397,48 +517,61 @@ public abstract class PackedArray<CT> extends Packed {
         public void set(int index, Double value) {
             setDouble(index, value);
         }
+
+        @Override
+        public OfDouble viewOfRange(int from, int to) {
+            return (OfDouble) super.viewOfRange(from, to);
+        }
+
+        @Override
+        public OfDouble copyOfRange(int from, int to) {
+            return (OfDouble) super.copyOfRange(from, to);
+        }
     }
 
     public static final class OfObject<CT extends PackedObject> extends PackedArray<CT> {
-        private static final PackedClass<OfObject, ?> TYPE = PackedClass.forClass(OfObject.class);
+        private static final PackedClass<OfObject, ?> BASIC_TYPE = PackedClass.forClass(OfObject.class);
 
         public static <CT2 extends PackedObject>
-        PackedClass<OfObject, CT2> typeWithComponent(Class<CT2> componentClass) {
-            return TYPE.withComponent(componentClass);
+        PackedClass<OfObject<CT2>, ?> typeWithComponent(Class<CT2> componentClass) {
+            return BASIC_TYPE.withComponent(componentClass);
         }
 
-        private final PackedClass<OfObject, CT> type;
+        private final PackedClass<OfObject<CT>, ?> type;
 
         public OfObject(Class<CT> componentClass, int length) {
             this(typeWithComponent(componentClass), length);
         }
 
-        private OfObject(PackedClass<OfObject, CT> type, int length) {
+        private OfObject(PackedClass<OfObject<CT>, ?> type, int length) {
             super(type, length);
             this.type = type;
         }
 
         public CT getView(int index) {
-            PackedClass<CT, ?> componentType = type.getComponentType();
+            @SuppressWarnings("unchecked")
+            PackedClass<CT, ?> componentType = (PackedClass) type.getComponentType();
             int elementOffset = offset + checkIndex(index) * componentType.getIndexScale();
             return Packed.newView(componentType, target, elementOffset, componentType.getSize());
         }
 
         public CT getCopy(int index) {
-            PackedClass<CT, ?> componentType = type.getComponentType();
+            @SuppressWarnings("unchecked")
+            PackedClass<CT, ?> componentType = (PackedClass) type.getComponentType();
             int elementOffset = offset + checkIndex(index) * componentType.getIndexScale();
             return Packed.newCopy(componentType, target, elementOffset, componentType.getSize());
         }
 
         public CT copyFrom(int index, CT source) {
-            PackedClass<CT, ?> componentType = type.getComponentType();
+            @SuppressWarnings("unchecked")
+            PackedClass<CT, ?> componentType = (PackedClass) type.getComponentType();
             int elementOffset = offset + checkIndex(index) * componentType.getIndexScale();
             System.arraycopy(source.target, source.offset, target, elementOffset, componentType.getSize());
             return source;
         }
 
         @Override
-        public PackedClass<OfObject, CT> type() {
+        public PackedClass<OfObject<CT>, ?> type() {
             return type;
         }
 
@@ -451,10 +584,63 @@ public abstract class PackedArray<CT> extends Packed {
         public void set(int index, CT value) {
             copyFrom(index, value);
         }
+
+        @Override
+        public OfObject<CT> viewOfRange(int from, int to) {
+            return (OfObject<CT>) super.viewOfRange(from, to);
+        }
+
+        @Override
+        public OfObject<CT> copyOfRange(int from, int to) {
+            return (OfObject<CT>) super.copyOfRange(from, to);
+        }
+
+        // Unsafe machinery
+
+        void initType(PackedClass<?, ?> type) {
+            U.putOrderedObject(this, TYPE, type);
+        }
+
+        private static final long TYPE;
+
+        static {
+            try {
+                TYPE = U.objectFieldOffset(
+                    PackedArray.OfObject.class.getDeclaredField("type"));
+            } catch (Exception e) {
+                throw new Error(e);
+            }
+        }
     }
 
 
     // Unsafe machinery
+
+    /**
+     * Factory for PackedArray views.
+     */
+    static <PA extends PackedArray<?>> PA newArrayView(PackedClass<PA, ?> arrayType, byte[] target, int offset, int length) {
+        PA array = newView(arrayType, target, offset, arrayType.arraySize(length));
+        U.putOrderedInt(array, LENGTH, length);
+        if (array instanceof OfObject) {
+            // don't forget the 'type' which is an instance field in OfObject
+            ((OfObject<?>) array).initType(arrayType);
+        }
+        return array;
+    }
+
+    /**
+     * Factory for PackedArray copies.
+     */
+    static <PA extends PackedArray<?>> PA newArrayCopy(PackedClass<PA, ?> arrayType, byte[] target, int offset, int length) {
+        PA array = newCopy(arrayType, target, offset, arrayType.arraySize(length));
+        U.putOrderedInt(array, LENGTH, length);
+        if (array instanceof OfObject) {
+            // don't forget the 'type' which is an instance field in OfObject
+            ((OfObject<?>) array).initType(arrayType);
+        }
+        return array;
+    }
 
     private static final long LENGTH;
 

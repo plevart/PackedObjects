@@ -160,7 +160,7 @@ stdout:
  Line{p1=Point{x=-6, y=-8}, p2=Point{x=6, y=8}}]
 ```
 
-PackedObject(s) themselves can be viewed as their superclasses:
+PackedObject(s) themselves can be viewed or copied as their superclasses:
 
 ```Java
 Point3D p3d = new Point3D(3, 5, 7);

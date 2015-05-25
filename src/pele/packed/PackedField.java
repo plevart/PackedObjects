@@ -57,8 +57,7 @@ public abstract class PackedField<T, H extends PackedObject> {
      * Constructor for packed array type fields
      */
     PackedField(PackedClass<T, ?> arrayType, int length, Class<H> homeClass) {
-        this(arrayType, homeClass,
-            arrayType.getComponentType().arraySize(length), arrayType.getAlignment());
+        this(arrayType, homeClass, arrayType.arraySize(length), arrayType.getAlignment());
     }
 
     public String getName() {
@@ -392,31 +391,39 @@ public abstract class PackedField<T, H extends PackedObject> {
         }
     }
 
-    public static final class pfArray<T, AT extends PackedArray<T>, H extends PackedObject> extends PackedField<AT, H> {
+    public static final class pfArray<AT extends PackedArray<?>, H extends PackedObject> extends PackedField<AT, H> {
         final int length;
 
-        public pfArray(PackedClass<AT, T> arrayType, int length, Class<H> homeClass) {
+        public pfArray(PackedClass<AT, ?> arrayType, int length, Class<H> homeClass) {
             super(arrayType, PackedArray.checkLength(length), homeClass);
             this.length = length;
         }
 
-        @SuppressWarnings("unchecked")
-        private PackedClass<AT, T> arrayType() {
-            return (PackedClass) type;
+        /**
+         * @return the length of the packed array embedded as a field.
+         */
+        public final int length() {
+            return length;
         }
+
 
         public AT getView(H object) {
             checkBlessed();
-            return PackedArray.newArrayView(arrayType(), object.target, object.offset + this.offset, length);
+            return PackedArray.newArrayView(type, object.target, object.offset + this.offset, length);
         }
 
         public AT getCopy(H object) {
             checkBlessed();
-            return PackedArray.newArrayCopy(arrayType(), object.target, object.offset + this.offset, length);
+            return PackedArray.newArrayCopy(type, object.target, object.offset + this.offset, length);
         }
 
         public AT copyFrom(H object, AT source) {
             checkBlessed();
+            if (this.type != source.type()) {
+                throw new ClassCastException(
+                    "Can't copy from array of different type - target type: " +
+                        type + ", source type: " + source.type());
+            }
             if (this.length != source.length()) {
                 throw new IllegalArgumentException(
                     "Can't copy from array of different length - target length: " +

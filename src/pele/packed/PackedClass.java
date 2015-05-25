@@ -76,7 +76,7 @@ public final class PackedClass<T, CT> {
      *                                  type.
      */
     @SuppressWarnings("unchecked")
-    <CT2> PackedClass<T, CT2> withComponent(Class<CT2> componentClass) {
+    <T2 extends T, CT2> PackedClass<T2, CT2> withComponent(Class<CT2> componentClass) {
         return (PackedClass) WITH_COMPONENT.get(componentClass);
     }
 
@@ -95,7 +95,7 @@ public final class PackedClass<T, CT> {
     };
 
     private final WeakReference<Class<T>> classRef;
-    private final PackedClass<CT, ?> componentType;
+    private final PackedClass<?, ?> componentType;
     private final List<PackedField<?, ?>> fields;
     private final int size, alignment, indexScale;
 
@@ -122,7 +122,7 @@ public final class PackedClass<T, CT> {
      * Constructor for 2nd level of PackedClasses (representing instantiatable
      * packed array types with a component type).
      */
-    private PackedClass(PackedClass<T, ?> arrayType, Class<CT> componentClass) {
+    private PackedClass(PackedClass<T, ?> arrayType, Class<?> componentClass) {
         Class<T> clazz = arrayType.asClass();
         if (!PackedArray.class.isAssignableFrom(clazz) || Modifier.isAbstract(clazz.getModifiers())) {
             throw new IllegalArgumentException(
@@ -191,7 +191,7 @@ public final class PackedClass<T, CT> {
         return fields;
     }
 
-    public PackedClass<CT, ?> getComponentType() {
+    public PackedClass<?, ?> getComponentType() {
         return componentType;
     }
 
