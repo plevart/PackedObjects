@@ -1,9 +1,8 @@
-# PackedObjects
-PackedObjects API
+# PackedObjects API
 
 PackedObject API implements the idea of
 <a href="http://www.oracle.com/technetwork/java/jvmls2013sciam-2013525.pdf">Packed Objects</a>
-developed by IBM in experimental J9 JVM, but doesn't need VM changes - just Unsafe.
+developed by IBM in experimental J9 JVM, but it doesn't need a special VM - just Unsafe.
 
 Here's how a simple packed object can be implemented:
 
