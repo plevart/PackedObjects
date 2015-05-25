@@ -186,3 +186,72 @@ pView: Point{x=4, y=5},
 pCopy: Point{x=3, y=6},
 p3d: Point3D{x=4, y=5, z=7}
 ```
+
+PackedArrays (of primitives or packed objects) of fixed sizes can be embedded in
+packed objects. PackedArrays support range views and range copies:
+
+```Java
+public class Curve extends PackedObject {
+    private static final pfInt<Curve> size =
+        new pfInt<>(Curve.class);
+    private static final pfArray<OfObject<Point>, Curve> points =
+        new pfArray<>(OfObject.typeWithComponent(Point.class), 10, Curve.class);
+
+    public int getSize() {
+        return size.getInt(this);
+    }
+
+    public int getCapacity() {
+        return points.length();
+    }
+
+    public void addPoint(Point p) {
+        int n = size.getInt(this);
+        points.getView(this).copyFrom(n, p);
+        size.setInt(this, n + 1);
+    }
+
+    public PackedArray.OfObject<Point> getPoints() {
+        return points.getView(this).viewOfRange(0, getSize());
+    }
+}
+```
+
+For example:
+
+```Java
+Curve c = new Curve();
+double r = 100d;
+for (int i = 0; i < 8; i++) {
+    c.addPoint(new Point(
+        (int) (r * cos(2d * PI * i / 8)),
+        (int) (r * sin(2d * PI * i / 8))
+    ));
+}
+System.out.println("curve: " + c);
+System.out.println("points: " + c.getPoints());
+System.out.println("curve size in bytes: " + c.type().getSize());
+```
+stdout:
+```
+curve: Curve{size=8,
+             points=[Point{x=100, y=0},
+                     Point{x=70, y=70},
+                     Point{x=0, y=100},
+                     Point{x=-70, y=70},
+                     Point{x=-100, y=0},
+                     Point{x=-70, y=-70},
+                     Point{x=0, y=-100},
+                     Point{x=70, y=-70},
+                     Point{x=0, y=0},
+                     Point{x=0, y=0}]}
+points: [Point{x=100, y=0},
+         Point{x=70, y=70},
+         Point{x=0, y=100},
+         Point{x=-70, y=70},
+         Point{x=-100, y=0},
+         Point{x=-70, y=-70},
+         Point{x=0, y=-100},
+         Point{x=70, y=-70}]
+curve size in bytes: 84
+```

@@ -1,5 +1,9 @@
 import pele.packed.PackedArray;
 
+import static java.lang.Math.PI;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+
 /**
  * Created by peter on 5/25/15.
  */
@@ -39,5 +43,17 @@ public class Test {
         pView.setX(4);
         pCopy.setY(6);
         System.out.printf("pView: %s, pCopy: %s, p3d: %s\n", pView, pCopy, p3d);
+
+        Curve c = new Curve();
+        double r = 100d;
+        for (int i = 0; i < 8; i++) {
+            c.addPoint(new Point(
+                (int) (r * cos(2d * PI * i / 8)),
+                (int) (r * sin(2d * PI * i / 8))
+            ));
+        }
+        System.out.println("curve: " + c);
+        System.out.println("points: " + c.getPoints());
+        System.out.println("curve size in bytes: " + c.type().getSize());
     }
 }
