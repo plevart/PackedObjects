@@ -14,7 +14,7 @@ public abstract class PackedArray<CT> extends Packed {
     /**
      * Constructor for "zero" PackedArray(s)
      */
-    PackedArray(PackedClass<? extends PackedArray<CT>, ?> arrayType, int length) {
+    PackedArray(PackedClass<? extends PackedArray<CT>> arrayType, int length) {
         super(arrayType.arraySize(checkLength(length)));
         this.length = length;
     }
@@ -30,7 +30,7 @@ public abstract class PackedArray<CT> extends Packed {
      * @return the type of the packed array.
      */
     @Override
-    public abstract PackedClass<? extends PackedArray<CT>, ?> type();
+    public abstract PackedClass<? extends PackedArray<CT>> type();
 
     /**
      * Grabs and returns the element at given {@code index}.
@@ -154,7 +154,7 @@ public abstract class PackedArray<CT> extends Packed {
         return length;
     }
 
-    static int arraySize(PackedClass<?, ?> componentType, int length) {
+    static int arraySize(PackedClass<?> componentType, int length) {
         return (length == 0)
             ? 0
             : (length - 1) * componentType.getIndexScale() + componentType.getSize();
@@ -180,13 +180,13 @@ public abstract class PackedArray<CT> extends Packed {
     }
 
     static abstract class OfPrimitive<CT> extends PackedArray<CT> {
-        OfPrimitive(PackedClass<? extends OfPrimitive<CT>, ?> arrayType, int length) {
+        OfPrimitive(PackedClass<? extends OfPrimitive<CT>> arrayType, int length) {
             super(arrayType, length);
         }
     }
 
     public static final class OfBoolean extends OfPrimitive<Boolean> {
-        public static final PackedClass<OfBoolean, Boolean> TYPE
+        public static final PackedClass<OfBoolean> TYPE
             = PackedClass.forClass(OfBoolean.class).withComponent(boolean.class);
 
         public OfBoolean(int length) {
@@ -203,7 +203,7 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         @Override
-        public PackedClass<OfBoolean, Boolean> type() {
+        public PackedClass<OfBoolean> type() {
             return TYPE;
         }
 
@@ -229,7 +229,7 @@ public abstract class PackedArray<CT> extends Packed {
     }
 
     public static final class OfByte extends OfPrimitive<Byte> {
-        public static final PackedClass<OfByte, Byte> TYPE
+        public static final PackedClass<OfByte> TYPE
             = PackedClass.forClass(OfByte.class).withComponent(byte.class);
 
         public OfByte(int length) {
@@ -246,7 +246,7 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         @Override
-        public PackedClass<OfByte, Byte> type() {
+        public PackedClass<OfByte> type() {
             return TYPE;
         }
 
@@ -272,7 +272,7 @@ public abstract class PackedArray<CT> extends Packed {
     }
 
     public static final class OfChar extends OfPrimitive<Character> {
-        public static final PackedClass<OfChar, Character> TYPE
+        public static final PackedClass<OfChar> TYPE
             = PackedClass.forClass(OfChar.class).withComponent(char.class);
 
         public OfChar(int length) {
@@ -289,7 +289,7 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         @Override
-        public PackedClass<OfChar, Character> type() {
+        public PackedClass<OfChar> type() {
             return TYPE;
         }
 
@@ -315,7 +315,7 @@ public abstract class PackedArray<CT> extends Packed {
     }
 
     public static final class OfShort extends OfPrimitive<Short> {
-        public static final PackedClass<OfShort, Short> TYPE
+        public static final PackedClass<OfShort> TYPE
             = PackedClass.forClass(OfShort.class).withComponent(short.class);
 
         public OfShort(int length) {
@@ -332,7 +332,7 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         @Override
-        public PackedClass<OfShort, Short> type() {
+        public PackedClass<OfShort> type() {
             return TYPE;
         }
 
@@ -358,7 +358,7 @@ public abstract class PackedArray<CT> extends Packed {
     }
 
     public static final class OfInt extends OfPrimitive<Integer> {
-        public static final PackedClass<OfInt, Integer> TYPE
+        public static final PackedClass<OfInt> TYPE
             = PackedClass.forClass(OfInt.class).withComponent(int.class);
 
         public OfInt(int length) {
@@ -375,7 +375,7 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         @Override
-        public PackedClass<OfInt, Integer> type() {
+        public PackedClass<OfInt> type() {
             return TYPE;
         }
 
@@ -401,7 +401,7 @@ public abstract class PackedArray<CT> extends Packed {
     }
 
     public static final class OfLong extends OfPrimitive<Long> {
-        public static final PackedClass<OfLong, Long> TYPE
+        public static final PackedClass<OfLong> TYPE
             = PackedClass.forClass(OfLong.class).withComponent(long.class);
 
         public OfLong(int length) {
@@ -418,7 +418,7 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         @Override
-        public PackedClass<OfLong, Long> type() {
+        public PackedClass<OfLong> type() {
             return TYPE;
         }
 
@@ -444,7 +444,7 @@ public abstract class PackedArray<CT> extends Packed {
     }
 
     public static final class OfFloat extends OfPrimitive<Float> {
-        public static final PackedClass<OfFloat, Float> TYPE
+        public static final PackedClass<OfFloat> TYPE
             = PackedClass.forClass(OfFloat.class).withComponent(float.class);
 
         public OfFloat(int length) {
@@ -461,7 +461,7 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         @Override
-        public PackedClass<OfFloat, Float> type() {
+        public PackedClass<OfFloat> type() {
             return TYPE;
         }
 
@@ -487,7 +487,7 @@ public abstract class PackedArray<CT> extends Packed {
     }
 
     public static final class OfDouble extends OfPrimitive<Double> {
-        public static final PackedClass<OfDouble, Double> TYPE
+        public static final PackedClass<OfDouble> TYPE
             = PackedClass.forClass(OfDouble.class).withComponent(double.class);
 
         public OfDouble(int length) {
@@ -504,7 +504,7 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         @Override
-        public PackedClass<OfDouble, Double> type() {
+        public PackedClass<OfDouble> type() {
             return TYPE;
         }
 
@@ -530,48 +530,48 @@ public abstract class PackedArray<CT> extends Packed {
     }
 
     public static final class OfObject<CT extends PackedObject> extends PackedArray<CT> {
-        private static final PackedClass<OfObject, ?> BASIC_TYPE = PackedClass.forClass(OfObject.class);
+        private static final PackedClass<OfObject> BASIC_TYPE = PackedClass.forClass(OfObject.class);
 
         public static <CT2 extends PackedObject>
-        PackedClass<OfObject<CT2>, ?> typeWithComponent(Class<CT2> componentClass) {
+        PackedClass<OfObject<CT2>> typeWithComponent(Class<CT2> componentClass) {
             return BASIC_TYPE.withComponent(componentClass);
         }
 
-        private final PackedClass<OfObject<CT>, ?> type;
+        private final PackedClass<OfObject<CT>> type;
 
         public OfObject(Class<CT> componentClass, int length) {
             this(typeWithComponent(componentClass), length);
         }
 
-        private OfObject(PackedClass<OfObject<CT>, ?> type, int length) {
+        private OfObject(PackedClass<OfObject<CT>> type, int length) {
             super(type, length);
             this.type = type;
         }
 
         public CT getView(int index) {
             @SuppressWarnings("unchecked")
-            PackedClass<CT, ?> componentType = (PackedClass) type.getComponentType();
+            PackedClass<CT> componentType = (PackedClass) type.getComponentType();
             int elementOffset = offset + checkIndex(index) * componentType.getIndexScale();
             return Packed.newView(componentType, target, elementOffset, componentType.getSize());
         }
 
         public CT getCopy(int index) {
             @SuppressWarnings("unchecked")
-            PackedClass<CT, ?> componentType = (PackedClass) type.getComponentType();
+            PackedClass<CT> componentType = (PackedClass) type.getComponentType();
             int elementOffset = offset + checkIndex(index) * componentType.getIndexScale();
             return Packed.newCopy(componentType, target, elementOffset, componentType.getSize());
         }
 
         public CT copyFrom(int index, CT source) {
             @SuppressWarnings("unchecked")
-            PackedClass<CT, ?> componentType = (PackedClass) type.getComponentType();
+            PackedClass<CT> componentType = (PackedClass) type.getComponentType();
             int elementOffset = offset + checkIndex(index) * componentType.getIndexScale();
             System.arraycopy(source.target, source.offset, target, elementOffset, componentType.getSize());
             return source;
         }
 
         @Override
-        public PackedClass<OfObject<CT>, ?> type() {
+        public PackedClass<OfObject<CT>> type() {
             return type;
         }
 
@@ -597,7 +597,7 @@ public abstract class PackedArray<CT> extends Packed {
 
         // Unsafe machinery
 
-        void initType(PackedClass<?, ?> type) {
+        void initType(PackedClass<?> type) {
             U.putOrderedObject(this, TYPE, type);
         }
 
@@ -619,11 +619,11 @@ public abstract class PackedArray<CT> extends Packed {
     /**
      * Factory for PackedArray views.
      */
-    static <PA extends PackedArray<?>> PA newArrayView(PackedClass<PA, ?> arrayType, byte[] target, int offset, int length) {
+    static <PA extends PackedArray<?>> PA newArrayView(PackedClass<PA> arrayType, byte[] target, int offset, int length) {
         PA array = newView(arrayType, target, offset, arrayType.arraySize(length));
         U.putOrderedInt(array, LENGTH, length);
         if (array instanceof OfObject) {
-            // don't forget the 'type' which is an instance field in OfObject
+            // don't forget the 'type' field in OfObject
             ((OfObject<?>) array).initType(arrayType);
         }
         return array;
@@ -632,11 +632,11 @@ public abstract class PackedArray<CT> extends Packed {
     /**
      * Factory for PackedArray copies.
      */
-    static <PA extends PackedArray<?>> PA newArrayCopy(PackedClass<PA, ?> arrayType, byte[] target, int offset, int length) {
+    static <PA extends PackedArray<?>> PA newArrayCopy(PackedClass<PA> arrayType, byte[] target, int offset, int length) {
         PA array = newCopy(arrayType, target, offset, arrayType.arraySize(length));
         U.putOrderedInt(array, LENGTH, length);
         if (array instanceof OfObject) {
-            // don't forget the 'type' which is an instance field in OfObject
+            // don't forget the 'type' field in OfObject
             ((OfObject<?>) array).initType(arrayType);
         }
         return array;

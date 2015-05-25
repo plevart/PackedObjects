@@ -41,7 +41,7 @@ abstract class Packed {
     /**
      * @return the type of this Packed instance.
      */
-    public abstract PackedClass<? extends Packed, ?> type();
+    public abstract PackedClass<? extends Packed> type();
 
     /**
      * Returns {@code true} if and only if given {@code object} is of the same
@@ -88,12 +88,12 @@ abstract class Packed {
     /**
      * Factory for views of Packed instances.
      */
-    static <P extends Packed> P newView(PackedClass<P, ?> packedClass, byte[] target, int offset, int size) {
+    static <P extends Packed> P newView(PackedClass<P> packedClass, byte[] target, int offset, int size) {
         try {
             @SuppressWarnings("unchecked")
             P instance = (P) U.allocateInstance(packedClass.asClass());
-            U.putObject(instance, TARGET, target); // piggy-back on store-release below
-            U.putInt(instance, OFFSET, offset);
+            U.putOrderedObject(instance, TARGET, target);
+            U.putOrderedInt(instance, OFFSET, offset);
             U.putOrderedInt(instance, SIZE, size);
             return instance;
         } catch (InstantiationException e) {
@@ -104,14 +104,14 @@ abstract class Packed {
     /**
      * Factory for copies of Packed instances.
      */
-    static <P extends Packed> P newCopy(PackedClass<P, ?> packedClass, byte[] target, int offset, int size) {
+    static <P extends Packed> P newCopy(PackedClass<P> packedClass, byte[] target, int offset, int size) {
         try {
             @SuppressWarnings("unchecked")
             P instance = (P) U.allocateInstance(packedClass.asClass());
-            U.putObject(instance, TARGET,
-                Arrays.copyOfRange(target, offset, offset + size)); // piggy-back on store-release below
+            U.putOrderedObject(instance, TARGET,
+                Arrays.copyOfRange(target, offset, offset + size));
             // offset is by default 0
-            // U.putInt(instance, OFFSET, 0);
+            // U.putOrderedInt(instance, OFFSET, 0);
             U.putOrderedInt(instance, SIZE, size);
             return instance;
         } catch (InstantiationException e) {

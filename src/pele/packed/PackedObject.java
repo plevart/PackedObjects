@@ -23,7 +23,7 @@ public class PackedObject extends Packed {
     /**
      * @return the type of this packed object.
      */
-    public final PackedClass<? extends PackedObject, ?> type() {
+    public final PackedClass<? extends PackedObject> type() {
         return PackedClass.forClass(getClass());
     }
 
@@ -40,7 +40,7 @@ public class PackedObject extends Packed {
                 "Can only view the packed object as a " + getClass() +
                     " or it's superclass");
         }
-        PackedClass<T, ?> type = PackedClass.forClass(clazz);
+        PackedClass<T> type = PackedClass.forClass(clazz);
         return Packed.newView(type, target, offset, type.getSize());
     }
 
@@ -57,7 +57,7 @@ public class PackedObject extends Packed {
                 "Can only copy the packed object as a " + getClass() +
                     " or it's superclass");
         }
-        PackedClass<T, ?> type = PackedClass.forClass(clazz);
+        PackedClass<T> type = PackedClass.forClass(clazz);
         return Packed.newCopy(type, target, offset, type.getSize());
     }
 
@@ -77,7 +77,7 @@ public class PackedObject extends Packed {
         return sb.toString();
     }
 
-    private void appendToString(StringBuilder sb, PackedClass<?, ?> pc) {
+    private void appendToString(StringBuilder sb, PackedClass<?> pc) {
         if (pc == null) {
             return;
         }

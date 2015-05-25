@@ -15,7 +15,7 @@ import java.util.*;
  * primitive or packed array, and in case of arrays, can also hold meta information
  * about the array's component type.
  */
-public final class PackedClass<T, CT> {
+public final class PackedClass<T> {
 
     /**
      * Returns a PackedClass object for given {@code clazz} which must
@@ -43,7 +43,7 @@ public final class PackedClass<T, CT> {
      *                                  class or subclass
      */
     @SuppressWarnings("unchecked")
-    public static <T> PackedClass<T, ?> forClass(Class<T> clazz) {
+    public static <T> PackedClass<T> forClass(Class<T> clazz) {
         return (PackedClass) FOR_CLASS.get(clazz);
     }
 
@@ -76,26 +76,26 @@ public final class PackedClass<T, CT> {
      *                                  type.
      */
     @SuppressWarnings("unchecked")
-    <T2 extends T, CT2> PackedClass<T2, CT2> withComponent(Class<CT2> componentClass) {
+    <T2 extends T> PackedClass<T2> withComponent(Class<?> componentClass) {
         return (PackedClass) WITH_COMPONENT.get(componentClass);
     }
 
-    private static final ClassValue<PackedClass<?, ?>> FOR_CLASS = new ClassValue<PackedClass<?, ?>>() {
+    private static final ClassValue<PackedClass<?>> FOR_CLASS = new ClassValue<PackedClass<?>>() {
         @Override
-        protected PackedClass<?, ?> computeValue(Class<?> clazz) {
+        protected PackedClass<?> computeValue(Class<?> clazz) {
             return new PackedClass<>(clazz);
         }
     };
 
-    private final ClassValue<PackedClass<T, ?>> WITH_COMPONENT = new ClassValue<PackedClass<T, ?>>() {
+    private final ClassValue<PackedClass<T>> WITH_COMPONENT = new ClassValue<PackedClass<T>>() {
         @Override
-        protected PackedClass<T, ?> computeValue(Class<?> componentClass) {
+        protected PackedClass<T> computeValue(Class<?> componentClass) {
             return new PackedClass<>(PackedClass.this, componentClass);
         }
     };
 
     private final WeakReference<Class<T>> classRef;
-    private final PackedClass<?, ?> componentType;
+    private final PackedClass<?> componentType;
     private final List<PackedField<?, ?>> fields;
     private final int size, alignment, indexScale;
 
@@ -122,7 +122,7 @@ public final class PackedClass<T, CT> {
      * Constructor for 2nd level of PackedClasses (representing instantiatable
      * packed array types with a component type).
      */
-    private PackedClass(PackedClass<T, ?> arrayType, Class<?> componentClass) {
+    private PackedClass(PackedClass<T> arrayType, Class<?> componentClass) {
         Class<T> clazz = arrayType.asClass();
         if (!PackedArray.class.isAssignableFrom(clazz) || Modifier.isAbstract(clazz.getModifiers())) {
             throw new IllegalArgumentException(
@@ -173,7 +173,7 @@ public final class PackedClass<T, CT> {
         return clazz;
     }
 
-    public PackedClass<? super T, ?> getSuperclass() {
+    public PackedClass<? super T> getSuperclass() {
         Class<? super T> clazz = asClass();
         if (!Packed.class.isAssignableFrom(clazz)) {
             // primitive
@@ -191,7 +191,7 @@ public final class PackedClass<T, CT> {
         return fields;
     }
 
-    public PackedClass<?, ?> getComponentType() {
+    public PackedClass<?> getComponentType() {
         return componentType;
     }
 
@@ -275,7 +275,7 @@ public final class PackedClass<T, CT> {
         }
     }
 
-    private static int computeSize(PackedClass<?, ?> type) {
+    private static int computeSize(PackedClass<?> type) {
         if (type.isPrimitive()) {
             return PRIMITIVE_SIZES.get(type.asClass());
         } else if (type.isObject()) {
@@ -289,14 +289,14 @@ public final class PackedClass<T, CT> {
         }
     }
 
-    private static int computeAlignment(PackedClass<?, ?> type) {
+    private static int computeAlignment(PackedClass<?> type) {
         if (type.isPrimitive()) {
             // primitives have same alignment as size
             return computeSize(type);
         } else if (type.isObject()) {
             // packed object alignment is max(alignments of all fields)
             int alignment = 1;
-            for (PackedClass<?, ?> c = type; c != null; c = c.getSuperclass()) {
+            for (PackedClass<?> c = type; c != null; c = c.getSuperclass()) {
                 for (PackedField<?, ?> pf : c.fields) {
                     if (pf.alignment > alignment) {
                         alignment = pf.alignment;

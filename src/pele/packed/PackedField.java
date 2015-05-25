@@ -19,7 +19,7 @@ import java.lang.reflect.Modifier;
  */
 public abstract class PackedField<T, H extends PackedObject> {
 
-    final PackedClass<T, ?> type;
+    final PackedClass<T> type;
     final Class<H> homeClass;
     final int offset, size, alignment;
     // the name injected by PackedClass constructor which blesses the field at the same time
@@ -27,7 +27,7 @@ public abstract class PackedField<T, H extends PackedObject> {
     // the modifiers injected by PackedClass constructor
     private int modifiers;
 
-    private PackedField(PackedClass<T, ?> type, Class<H> homeClass, int size, int alignment) {
+    private PackedField(PackedClass<T> type, Class<H> homeClass, int size, int alignment) {
         this.type = type;
         this.homeClass = homeClass;
         // PackedField(s) are assigned to static fields of PackedObject subclasses.
@@ -48,7 +48,7 @@ public abstract class PackedField<T, H extends PackedObject> {
     /**
      * Constructor for primitive and packed object type fields
      */
-    PackedField(PackedClass<T, ?> primitiveOrObjectType, Class<H> homeClass) {
+    PackedField(PackedClass<T> primitiveOrObjectType, Class<H> homeClass) {
         this(primitiveOrObjectType, homeClass,
             primitiveOrObjectType.getSize(), primitiveOrObjectType.getAlignment());
     }
@@ -56,7 +56,7 @@ public abstract class PackedField<T, H extends PackedObject> {
     /**
      * Constructor for packed array type fields
      */
-    PackedField(PackedClass<T, ?> arrayType, int length, Class<H> homeClass) {
+    PackedField(PackedClass<T> arrayType, int length, Class<H> homeClass) {
         this(arrayType, homeClass, arrayType.arraySize(length), arrayType.getAlignment());
     }
 
@@ -70,7 +70,7 @@ public abstract class PackedField<T, H extends PackedObject> {
         return modifiers;
     }
 
-    public PackedClass<T, ?> getType() {
+    public PackedClass<T> getType() {
         checkBlessed();
         return type;
     }
@@ -394,7 +394,7 @@ public abstract class PackedField<T, H extends PackedObject> {
     public static final class pfArray<AT extends PackedArray<?>, H extends PackedObject> extends PackedField<AT, H> {
         final int length;
 
-        public pfArray(PackedClass<AT, ?> arrayType, int length, Class<H> homeClass) {
+        public pfArray(PackedClass<AT> arrayType, int length, Class<H> homeClass) {
             super(arrayType, PackedArray.checkLength(length), homeClass);
             this.length = length;
         }
