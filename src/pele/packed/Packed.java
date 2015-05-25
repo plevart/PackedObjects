@@ -108,8 +108,8 @@ abstract class Packed {
         try {
             @SuppressWarnings("unchecked")
             P instance = (P) U.allocateInstance(packedClass.asClass());
-            U.putObject(Arrays.copyOfRange(target, offset, offset + size),
-                TARGET, target); // piggy-back on store-release below
+            U.putObject(instance, TARGET,
+                Arrays.copyOfRange(target, offset, offset + size)); // piggy-back on store-release below
             // offset is by default 0
             // U.putInt(instance, OFFSET, 0);
             U.putOrderedInt(instance, SIZE, size);

@@ -1,4 +1,3 @@
-import pele.packed.PackedArray;
 import pele.packed.PackedField.pfInt;
 import pele.packed.PackedObject;
 
@@ -10,27 +9,23 @@ public class Point extends PackedObject {
     private static final pfInt<Point> y = new pfInt<>(Point.class);
 
     public Point(int _x, int _y) {
-        x.set(this, _x);
-        y.set(this, _y);
+        x.setInt(this, _x);
+        y.setInt(this, _y);
     }
 
     public int getX() {
-        return x.get(this);
+        return x.getInt(this);
+    }
+
+    public void setX(int _x) {
+        x.setInt(this, _x);
     }
 
     public int getY() {
         return y.get(this);
     }
 
-    // test
-    public static void main(String[] args) {
-        Point p = new Point(3, 5);
-        System.out.println(p);
-
-        PackedArray.OfObject<Point> points = new PackedArray.OfObject<>(Point.class, 5);
-        for (int i = 0; i < points.length(); i++) {
-            points.set(i, new Point(i * 2, i * 3));
-        }
-        System.out.println(points);
+    public void setY(int _y) {
+        y.setInt(this, _y);
     }
 }

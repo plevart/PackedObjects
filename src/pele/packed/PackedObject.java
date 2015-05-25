@@ -58,7 +58,7 @@ public class PackedObject extends Packed {
                     " or it's superclass");
         }
         PackedClass<T, ?> type = PackedClass.forClass(clazz);
-        return Packed.newView(type, target, offset, type.getSize());
+        return Packed.newCopy(type, target, offset, type.getSize());
     }
 
     /**

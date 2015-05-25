@@ -8,17 +8,14 @@ public class Point3D extends Point {
 
     public Point3D(int _x, int _y, int _z) {
         super(_x, _y);
-        z.set(this, _z);
+        z.setInt(this, _z);
     }
 
     public int getZ() {
-        return z.get(this);
+        return z.getInt(this);
     }
 
-    // test
-    public static void main(String[] args) {
-        Point3D p = new Point3D(3, 5, 7);
-        System.out.println(p);
-        System.out.println(p.type());
+    public void setZ(int _z) {
+        z.setInt(this, _z);
     }
 }
