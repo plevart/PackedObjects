@@ -22,7 +22,7 @@ public class Point extends PackedObject {
     }
 
     public int getY() {
-        return y.get(this);
+        return y.getInt(this);
     }
 
     public void setY(int _y) {
