@@ -1,9 +1,11 @@
+/*
+ * Written by Peter.Levart@gmail.com and released to the public domain,
+ * as explained at http://creativecommons.org/publicdomain/zero/1.0/
+ */
 package pele.packed;
 
 /**
  * PackedArray is an array of primitives or PackedObject(s).
- *
- * @author peter.levart@gmail.com
  */
 public abstract class PackedArray<CT> extends Packed {
 
@@ -398,12 +400,17 @@ public abstract class PackedArray<CT> extends Packed {
     }
 
     public static final class OfObject<CT extends PackedObject> extends PackedArray<CT> {
-        public static final PackedClass<OfObject, ?> TYPE = PackedClass.forClass(OfObject.class);
+        private static final PackedClass<OfObject, ?> TYPE = PackedClass.forClass(OfObject.class);
+
+        public static <CT2 extends PackedObject>
+        PackedClass<OfObject, CT2> typeWithComponent(Class<CT2> componentClass) {
+            return TYPE.withComponent(componentClass);
+        }
 
         private final PackedClass<OfObject, CT> type;
 
         public OfObject(Class<CT> componentClass, int length) {
-            this(TYPE.withComponent(componentClass), length);
+            this(typeWithComponent(componentClass), length);
         }
 
         private OfObject(PackedClass<OfObject, CT> type, int length) {

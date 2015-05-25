@@ -1,3 +1,7 @@
+/*
+ * Written by Peter.Levart@gmail.com and released to the public domain,
+ * as explained at http://creativecommons.org/publicdomain/zero/1.0/
+ */
 package pele.packed;
 
 
@@ -7,21 +11,72 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 /**
- * PackedClass holds additional meta information about packed object or primitive or
- * packed array class, and in case of arrays, can also hold meta information about
- * the array's component.
- *
- * @author peter.levart@gmail.com
+ * PackedClass holds additional meta information about the type of packed object,
+ * primitive or packed array, and in case of arrays, can also hold meta information
+ * about the array's component type.
  */
 public final class PackedClass<T, CT> {
 
+    /**
+     * Returns a PackedClass object for given {@code clazz} which must
+     * represent either:
+     * <ul>
+     * <li>a non-void primitive type, or</li>
+     * <li>a {@link Packed} class or subclass (either abstract or concrete)</li>
+     * </ul>
+     * <p>
+     * If given {@code clazz} represents an array type ({@link PackedArray} or
+     * subclass) the returned PackedClass does not specify the full array
+     * type yet as it's lacking a {@link #getComponentType() component type}. To
+     * obtain PackedClass(es) representing instantiatable array type(s), use either:
+     * <ul>
+     * <li>{@link PackedArray.OfBoolean#TYPE}, {@link PackedArray.OfByte#TYPE}, ...
+     * constants, or</li>
+     * <li>{@link PackedArray.OfObject#typeWithComponent(Class)} static method.</li>
+     * </ul>
+     *
+     * @param clazz the Class for which to obtain a PackedClass
+     * @param <T>   the type represented by given {@code clazz}
+     * @return a PackedClass object for given {@code clazz}
+     * @throws IllegalArgumentException if given {@code clazz} does not represent
+     *                                  a non-void primitive type or {@link Packed}
+     *                                  class or subclass
+     */
     @SuppressWarnings("unchecked")
     public static <T> PackedClass<T, ?> forClass(Class<T> clazz) {
         return (PackedClass) FOR_CLASS.get(clazz);
     }
 
+    /**
+     * Factory for 2nd level of PackedClasses (representing instantiatable packed
+     * array types with a component type). The invariant is that only PackedClasses
+     * for instantiatable types can be constructed or {@link IllegalArgumentException}
+     * is thrown:
+     * <ul>
+     * <li>the {@code arrayType} must represent a non-abstract {@link PackedArray} subclass</li>
+     * <li>the {@code componentClass} must represent either a non-void primitive class or
+     * a {@link PackedObject} or it's non-abstract subclass</li>
+     * <li>if the array type is a subclass of {@link PackedArray.OfPrimitive} then
+     * the component type must be a primitive and vice versa:</li>
+     * <li>if the array type is a subclass of {@link PackedArray.OfObject} then
+     * the component type must be a concrete {@link PackedObject} or subclass</li>
+     * </ul>
+     * This is part of validation that is performed just once for a particular pair
+     * of {@code (arrayType, componentClass)} and then cached. Contrary to the
+     * constructor of 1st level of PackedClasses (primitive types, PackedObject(s)
+     * and PackedArray(s) with yet unknown component type) where no such restriction
+     * is placed.
+     *
+     * @return a PackedClass representing the same basic array type as this
+     * PackedClass with a component type represented by given {@code componentClass}
+     * @throws IllegalArgumentException if this ComponentClass does not represent an
+     *                                  instantiatable basic array type or given
+     *                                  {@code componentClass} goes not represent
+     *                                  an instantiatable and compatible component
+     *                                  type.
+     */
     @SuppressWarnings("unchecked")
-    public <CT2> PackedClass<T, CT2> withComponent(Class<CT2> componentClass) {
+    <CT2> PackedClass<T, CT2> withComponent(Class<CT2> componentClass) {
         return (PackedClass) WITH_COMPONENT.get(componentClass);
     }
 
@@ -45,7 +100,8 @@ public final class PackedClass<T, CT> {
     private final int size, alignment, indexScale;
 
     /**
-     * Constructor for 1st level of PackedClasses (without a component type yet)
+     * Constructor for 1st level of PackedClasses (representing primitive types,
+     * packed object types or basic packed array types without a component type yet)
      */
     private PackedClass(Class<T> clazz) {
         if ((!clazz.isPrimitive() || void.class == clazz) && !Packed.class.isAssignableFrom(clazz)) {
@@ -63,11 +119,12 @@ public final class PackedClass<T, CT> {
     }
 
     /**
-     * Constructor for 2nd level of PackedClasses (array types with a component type)
+     * Constructor for 2nd level of PackedClasses (representing instantiatable
+     * packed array types with a component type).
      */
-    private PackedClass(PackedClass<T, ?> parent, Class<CT> componentClass) {
-        Class<T> clazz = parent.asClass();
-        if (!PackedArray.class.isAssignableFrom(clazz)) {
+    private PackedClass(PackedClass<T, ?> arrayType, Class<CT> componentClass) {
+        Class<T> clazz = arrayType.asClass();
+        if (!PackedArray.class.isAssignableFrom(clazz) || Modifier.isAbstract(clazz.getModifiers())) {
             throw new IllegalArgumentException(
                 "Non-arrays can't have a component type: " +
                     clazz + " is not a non-abstract " +
@@ -83,14 +140,14 @@ public final class PackedClass<T, CT> {
         if (PackedArray.OfPrimitive.class.isAssignableFrom(clazz) ^
             componentClass.isPrimitive()) {
             throw new IllegalArgumentException(
-                "Primitive arrays must have a primitive component type and " +
+                "Primitive arrays must have a primitive component type while " +
                     "object arrays must have an object component type - array type: " +
-                    clazz + ", component type: " + componentClass);
+                    clazz.getName() + ", component type: " + componentClass.getName());
         }
         // inherit clazz, fields and size from parent
-        classRef = parent.classRef;
-        fields = parent.fields;
-        size = parent.size;
+        classRef = arrayType.classRef;
+        fields = arrayType.fields;
+        size = arrayType.size;
         componentType = forClass(componentClass);
         alignment = computeAlignment(this);
         indexScale = computeIndexScale(size, alignment);
@@ -268,4 +325,3 @@ public final class PackedClass<T, CT> {
         }
     }
 }
-

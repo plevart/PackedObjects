@@ -1,3 +1,7 @@
+/*
+ * Written by Peter.Levart@gmail.com and released to the public domain,
+ * as explained at http://creativecommons.org/publicdomain/zero/1.0/
+ */
 package pele.packed;
 
 import sun.misc.Unsafe;
@@ -12,8 +16,6 @@ import java.lang.reflect.Modifier;
  * are instantiated and assigned to {@code static final} fields of a
  * {@link PackedObject} subclass. The code in the packed object class then
  * uses them to retrieve and store values.
- *
- * @author peter.levart@gmail.com
  */
 public abstract class PackedField<T, H extends PackedObject> {
 

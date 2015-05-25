@@ -1,3 +1,7 @@
+/*
+ * Written by Peter.Levart@gmail.com and released to the public domain,
+ * as explained at http://creativecommons.org/publicdomain/zero/1.0/
+ */
 package pele.packed;
 
 import sun.misc.Unsafe;
@@ -7,8 +11,6 @@ import java.util.Arrays;
 
 /**
  * Abstract base for PackedObject(s) and PackedArray(s).
- *
- * @author peter.levart@gmail.com
  */
 abstract class Packed {
     final byte[] target;
