@@ -28,7 +28,12 @@ public class Curve extends PackedObject {
         size.setInt(this, n + 1);
     }
 
-    public PackedArray.OfObject<Point> getPoints() {
+    public PackedArray.OfObject<Point> getPointsView() {
         return points.getView(this).viewOfRange(0, getSize());
     }
+
+    public PackedArray.OfObject<Point> getPointsCopy() {
+        return points.getView(this).viewOfRange(0, getSize());
+    }
+
 }

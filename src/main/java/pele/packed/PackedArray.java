@@ -96,9 +96,7 @@ public abstract class PackedArray<CT> extends Packed {
     public PackedArray<CT> viewOfRange(int from, int to) {
         checkRangeIndexes(from, to);
         int indexScale = type().getComponentType().getIndexScale();
-        int rangeOffset = offset + from * indexScale;
-        int rangeLength = to - from;
-        return newArrayView(type(), target, rangeOffset, rangeLength);
+        return getArrayViewU(type(), indexScale * from, to - from);
     }
 
     /**
@@ -121,9 +119,7 @@ public abstract class PackedArray<CT> extends Packed {
     public PackedArray<CT> copyOfRange(int from, int to) {
         checkRangeIndexes(from, to);
         int indexScale = type().getComponentType().getIndexScale();
-        int rangeOffset = offset + from * indexScale;
-        int rangeLength = to - from;
-        return newArrayCopy(type(), target, rangeOffset, rangeLength);
+        return getArrayCopyU(type(), indexScale * from, to - from);
     }
 
     /**
@@ -194,11 +190,11 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         public boolean getBoolean(int index) {
-            return U.getBoolean(target, unsafeOffset() + checkIndex(index));
+            return getBooleanU(checkIndex(index));
         }
 
         public boolean setBoolean(int index, boolean value) {
-            U.putBoolean(target, unsafeOffset() + checkIndex(index), value);
+            putBooleanU(checkIndex(index), value);
             return value;
         }
 
@@ -237,11 +233,11 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         public byte getByte(int index) {
-            return U.getByte(target, unsafeOffset() + checkIndex(index));
+            return getByteU(checkIndex(index));
         }
 
         public byte setByte(int index, byte value) {
-            U.putByte(target, unsafeOffset() + checkIndex(index), value);
+            putByteU(checkIndex(index), value);
             return value;
         }
 
@@ -280,11 +276,11 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         public char getChar(int index) {
-            return U.getChar(target, unsafeOffset() + (checkIndex(index) << 1));
+            return getCharU(checkIndex(index) << 1);
         }
 
         public char setChar(int index, char value) {
-            U.putChar(target, unsafeOffset() + (checkIndex(index) << 1), value);
+            putCharU(checkIndex(index) << 1, value);
             return value;
         }
 
@@ -323,11 +319,11 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         public short getShort(int index) {
-            return U.getShort(target, unsafeOffset() + (checkIndex(index) << 1));
+            return getShortU(checkIndex(index) << 1);
         }
 
         public short setShort(int index, short value) {
-            U.putShort(target, unsafeOffset() + (checkIndex(index) << 1), value);
+            putShortU(checkIndex(index) << 1, value);
             return value;
         }
 
@@ -366,11 +362,11 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         public int getInt(int index) {
-            return U.getInt(target, unsafeOffset() + (checkIndex(index) << 2));
+            return getIntU(checkIndex(index) << 2);
         }
 
         public int setInt(int index, int value) {
-            U.putInt(target, unsafeOffset() + (checkIndex(index) << 2), value);
+            putIntU(checkIndex(index) << 2, value);
             return value;
         }
 
@@ -409,11 +405,11 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         public long getLong(int index) {
-            return U.getLong(target, unsafeOffset() + (checkIndex(index) << 3));
+            return getLongU(checkIndex(index) << 3);
         }
 
         public long setLong(int index, long value) {
-            U.putLong(target, unsafeOffset() + (checkIndex(index) << 3), value);
+            putLongU(checkIndex(index) << 3, value);
             return value;
         }
 
@@ -452,11 +448,11 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         public float getFloat(int index) {
-            return U.getFloat(target, unsafeOffset() + (checkIndex(index) << 2));
+            return getFloatU(checkIndex(index) << 2);
         }
 
         public float setFloat(int index, float value) {
-            U.putFloat(target, unsafeOffset() + (checkIndex(index) << 2), value);
+            putFloatU(checkIndex(index) << 2, value);
             return value;
         }
 
@@ -495,11 +491,11 @@ public abstract class PackedArray<CT> extends Packed {
         }
 
         public double getDouble(int index) {
-            return U.getDouble(target, unsafeOffset() + (checkIndex(index) << 3));
+            return getDoubleU(checkIndex(index) << 3);
         }
 
         public double setDouble(int index, double value) {
-            U.putDouble(target, unsafeOffset() + (checkIndex(index) << 3), value);
+            putDoubleU(checkIndex(index) << 3, value);
             return value;
         }
 
@@ -551,22 +547,18 @@ public abstract class PackedArray<CT> extends Packed {
         public CT getView(int index) {
             @SuppressWarnings("unchecked")
             PackedClass<CT> componentType = (PackedClass) type.getComponentType();
-            int elementOffset = offset + checkIndex(index) * componentType.getIndexScale();
-            return Packed.newView(componentType, target, elementOffset, componentType.getSize());
+            return getViewU(componentType, checkIndex(index) * componentType.getIndexScale(), componentType.getSize());
         }
 
         public CT getCopy(int index) {
             @SuppressWarnings("unchecked")
             PackedClass<CT> componentType = (PackedClass) type.getComponentType();
-            int elementOffset = offset + checkIndex(index) * componentType.getIndexScale();
-            return Packed.newCopy(componentType, target, elementOffset, componentType.getSize());
+            return getCopyU(componentType, checkIndex(index) * componentType.getIndexScale(), componentType.getSize());
         }
 
         public CT copyFrom(int index, CT source) {
-            @SuppressWarnings("unchecked")
-            PackedClass<CT> componentType = (PackedClass) type.getComponentType();
-            int elementOffset = offset + checkIndex(index) * componentType.getIndexScale();
-            System.arraycopy(source.target, source.offset, target, elementOffset, componentType.getSize());
+            PackedClass<?> componentType = type.getComponentType();
+            copyFromU(source, checkIndex(index) * componentType.getIndexScale(), componentType.getSize());
             return source;
         }
 
@@ -597,7 +589,9 @@ public abstract class PackedArray<CT> extends Packed {
 
         // Unsafe machinery
 
-        void initType(PackedClass<?> type) {
+        @Override
+        void initLengthAndType(int length, PackedClass<?> type) {
+            super.initLengthAndType(length, type);
             U.putOrderedObject(this, TYPE, type);
         }
 
@@ -616,30 +610,8 @@ public abstract class PackedArray<CT> extends Packed {
 
     // Unsafe machinery
 
-    /**
-     * Factory for PackedArray views.
-     */
-    static <PA extends PackedArray<?>> PA newArrayView(PackedClass<PA> arrayType, byte[] target, int offset, int length) {
-        PA array = newView(arrayType, target, offset, arrayType.arraySize(length));
-        U.putOrderedInt(array, LENGTH, length);
-        if (array instanceof OfObject) {
-            // don't forget the 'type' field in OfObject
-            ((OfObject<?>) array).initType(arrayType);
-        }
-        return array;
-    }
-
-    /**
-     * Factory for PackedArray copies.
-     */
-    static <PA extends PackedArray<?>> PA newArrayCopy(PackedClass<PA> arrayType, byte[] target, int offset, int length) {
-        PA array = newCopy(arrayType, target, offset, arrayType.arraySize(length));
-        U.putOrderedInt(array, LENGTH, length);
-        if (array instanceof OfObject) {
-            // don't forget the 'type' field in OfObject
-            ((OfObject<?>) array).initType(arrayType);
-        }
-        return array;
+    void initLengthAndType(int length, PackedClass<?> type) {
+        U.putOrderedInt(this, LENGTH, length);
     }
 
     private static final long LENGTH;

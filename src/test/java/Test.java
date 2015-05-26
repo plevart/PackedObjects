@@ -63,7 +63,7 @@ public class Test {
         ok &= testEquals(7, c.toString(),
             "Curve{size=8, points=[Point{x=100, y=0}, Point{x=70, y=70}, Point{x=0, y=100}, Point{x=-70, y=70}, Point{x=-100, y=0}, Point{x=-70, y=-70}, Point{x=0, y=-100}, Point{x=70, y=-70}, Point{x=0, y=0}, Point{x=0, y=0}]}");
 
-        ok &= testEquals(8, c.getPoints().toString(),
+        ok &= testEquals(8, c.getPointsView().toString(),
             "[Point{x=100, y=0}, Point{x=70, y=70}, Point{x=0, y=100}, Point{x=-70, y=70}, Point{x=-100, y=0}, Point{x=-70, y=-70}, Point{x=0, y=-100}, Point{x=70, y=-70}]");
 
         if (ok) {

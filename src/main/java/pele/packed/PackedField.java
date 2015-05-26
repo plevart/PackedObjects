@@ -29,6 +29,8 @@ public abstract class PackedField<T, H extends PackedObject> {
 
     private PackedField(PackedClass<T> type, Class<H> homeClass, int size, int alignment) {
         this.type = type;
+        // validate homeClass at field construction time
+        homeClass.asSubclass(PackedObject.class);
         this.homeClass = homeClass;
         // PackedField(s) are assigned to static fields of PackedObject subclasses.
         // The order of class initialization and static field assignment is defined
@@ -149,12 +151,12 @@ public abstract class PackedField<T, H extends PackedObject> {
 
         public boolean getBoolean(H object) {
             checkBlessed();
-            return U.getBoolean(object.target, object.unsafeOffset() + this.offset);
+            return homeClass.cast(object).getBooleanU(this.offset);
         }
 
         public boolean setBoolean(H object, boolean value) {
             checkBlessed();
-            U.putBoolean(object.target, object.unsafeOffset() + this.offset, value);
+            homeClass.cast(object).putBooleanU(this.offset, value);
             return value;
         }
 
@@ -176,12 +178,12 @@ public abstract class PackedField<T, H extends PackedObject> {
 
         public byte getByte(H object) {
             checkBlessed();
-            return U.getByte(object.target, object.unsafeOffset() + this.offset);
+            return homeClass.cast(object).getByteU(this.offset);
         }
 
         public byte setByte(H object, byte value) {
             checkBlessed();
-            U.putByte(object.target, object.unsafeOffset() + this.offset, value);
+            homeClass.cast(object).putByteU(this.offset, value);
             return value;
         }
 
@@ -203,12 +205,12 @@ public abstract class PackedField<T, H extends PackedObject> {
 
         public char getChar(H object) {
             checkBlessed();
-            return U.getChar(object.target, object.unsafeOffset() + this.offset);
+            return homeClass.cast(object).getCharU(this.offset);
         }
 
         public char setChar(H object, char value) {
             checkBlessed();
-            U.putChar(object.target, object.unsafeOffset() + this.offset, value);
+            homeClass.cast(object).putCharU(this.offset, value);
             return value;
         }
 
@@ -230,12 +232,12 @@ public abstract class PackedField<T, H extends PackedObject> {
 
         public short getShort(H object) {
             checkBlessed();
-            return U.getShort(object.target, object.unsafeOffset() + this.offset);
+            return homeClass.cast(object).getShortU(this.offset);
         }
 
         public short setShort(H object, short value) {
             checkBlessed();
-            U.putShort(object.target, object.unsafeOffset() + this.offset, value);
+            homeClass.cast(object).putShortU(this.offset, value);
             return value;
         }
 
@@ -257,12 +259,12 @@ public abstract class PackedField<T, H extends PackedObject> {
 
         public int getInt(H object) {
             checkBlessed();
-            return U.getInt(object.target, object.unsafeOffset() + this.offset);
+            return homeClass.cast(object).getIntU(this.offset);
         }
 
         public int setInt(H object, int value) {
             checkBlessed();
-            U.putInt(object.target, object.unsafeOffset() + this.offset, value);
+            homeClass.cast(object).putIntU(this.offset, value);
             return value;
         }
 
@@ -284,12 +286,12 @@ public abstract class PackedField<T, H extends PackedObject> {
 
         public long getLong(H object) {
             checkBlessed();
-            return U.getLong(object.target, object.unsafeOffset() + this.offset);
+            return homeClass.cast(object).getLongU(this.offset);
         }
 
         public long setLong(H object, long value) {
             checkBlessed();
-            U.putLong(object.target, object.unsafeOffset() + this.offset, value);
+            homeClass.cast(object).putLongU(this.offset, value);
             return value;
         }
 
@@ -311,12 +313,12 @@ public abstract class PackedField<T, H extends PackedObject> {
 
         public float getFloat(H object) {
             checkBlessed();
-            return U.getFloat(object.target, object.unsafeOffset() + this.offset);
+            return homeClass.cast(object).getFloatU(this.offset);
         }
 
         public float setFloat(H object, float value) {
             checkBlessed();
-            U.putFloat(object.target, object.unsafeOffset() + this.offset, value);
+            homeClass.cast(object).putFloatU(this.offset, value);
             return value;
         }
 
@@ -338,12 +340,12 @@ public abstract class PackedField<T, H extends PackedObject> {
 
         public double getDouble(H object) {
             checkBlessed();
-            return U.getDouble(object.target, object.unsafeOffset() + this.offset);
+            return homeClass.cast(object).getDoubleU(this.offset);
         }
 
         public double setDouble(H object, double value) {
             checkBlessed();
-            U.putDouble(object.target, object.unsafeOffset() + this.offset, value);
+            homeClass.cast(object).putDoubleU(this.offset, value);
             return value;
         }
 
@@ -360,23 +362,32 @@ public abstract class PackedField<T, H extends PackedObject> {
 
     public static final class pfObject<T extends PackedObject, H extends PackedObject> extends PackedField<T, H> {
 
-        public pfObject(Class<T> type, Class<H> homeClass) {
-            super(PackedClass.forClass(type), homeClass);
+        private final Class<T> clazz; // cached and validated to have it handy
+        private final int size; // cached to have it handy
+
+        public pfObject(Class<T> fieldType, Class<H> homeClass) {
+            super(PackedClass.forClass(fieldType), homeClass);
+            // validate passed-in field type at field construction time
+            if (Modifier.isAbstract(fieldType.asSubclass(PackedObject.class).getModifiers())) {
+                throw new IllegalArgumentException("Can't have a field of an abstract packed object class");
+            }
+            this.clazz = fieldType;
+            this.size = type.getSize();
         }
 
         public T getView(H object) {
             checkBlessed();
-            return Packed.newView(type, object.target, object.offset + this.offset, type.getSize());
+            return homeClass.cast(object).getViewU(clazz, offset, size);
         }
 
         public T getCopy(H object) {
             checkBlessed();
-            return Packed.newCopy(type, object.target, object.offset + this.offset, type.getSize());
+            return homeClass.cast(object).getCopyU(clazz, offset, size);
         }
 
         public T copyFrom(H object, T source) {
             checkBlessed();
-            System.arraycopy(source.target, source.offset, object.target, object.offset + this.offset, type.getSize());
+            homeClass.cast(object).copyFromU(clazz.cast(source), offset, size);
             return source;
         }
 
@@ -396,6 +407,7 @@ public abstract class PackedField<T, H extends PackedObject> {
 
         public pfArray(PackedClass<AT> arrayType, int length, Class<H> homeClass) {
             super(arrayType, PackedArray.checkLength(length), homeClass);
+            // arrayType is already validate when constructed via PackedClass/PackedArray factory methods
             this.length = length;
         }
 
@@ -409,27 +421,27 @@ public abstract class PackedField<T, H extends PackedObject> {
 
         public AT getView(H object) {
             checkBlessed();
-            return PackedArray.newArrayView(type, object.target, object.offset + this.offset, length);
+            return homeClass.cast(object).getArrayViewU(type, offset, size, length);
         }
 
         public AT getCopy(H object) {
             checkBlessed();
-            return PackedArray.newArrayCopy(type, object.target, object.offset + this.offset, length);
+            return homeClass.cast(object).getArrayCopyU(type, offset, size, length);
         }
 
         public AT copyFrom(H object, AT source) {
             checkBlessed();
-            if (this.type != source.type()) {
+            if (type != source.type()) {
                 throw new ClassCastException(
                     "Can't copy from array of different type - target type: " +
                         type + ", source type: " + source.type());
             }
-            if (this.length != source.length()) {
+            if (length != source.length()) {
                 throw new IllegalArgumentException(
                     "Can't copy from array of different length - target length: " +
-                        this.length + ", source length: " + source.length());
+                        length + ", source length: " + source.length());
             }
-            System.arraycopy(source.target, source.offset, object.target, object.offset + this.offset, type.arraySize(this.length));
+            homeClass.cast(object).copyFromU(source, offset, size);
             return source;
         }
 

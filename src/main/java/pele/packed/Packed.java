@@ -13,12 +13,9 @@ import java.util.Arrays;
  * Abstract base for PackedObject(s) and PackedArray(s).
  */
 abstract class Packed {
-    final byte[] target;
-    final int offset, size;
-
-    final long unsafeOffset() {
-        return Unsafe.ARRAY_BYTE_BASE_OFFSET + offset;
-    }
+    private final byte[] target;
+    private final int offset;
+    private final int size;
 
     /**
      * Constructor for "zero" PackedObject(s).
@@ -85,16 +82,22 @@ abstract class Packed {
         return h;
     }
 
+    // low-level operations - unsafe and unchecked
+
     /**
      * Factory for views of Packed instances.
      */
-    static <P extends Packed> P newView(PackedClass<P> packedClass, byte[] target, int offset, int size) {
+    final <P extends Packed> P getViewU(PackedClass<P> type, long offset, long size) {
+        return getViewU(type.asClass(), offset, size);
+    }
+
+    final <P extends Packed> P getViewU(Class<P> clazz, long offset, long size) {
         try {
             @SuppressWarnings("unchecked")
-            P instance = (P) U.allocateInstance(packedClass.asClass());
-            U.putOrderedObject(instance, TARGET, target);
-            U.putOrderedInt(instance, OFFSET, offset);
-            U.putOrderedInt(instance, SIZE, size);
+            P instance = (P) U.allocateInstance(clazz);
+            U.putOrderedObject(instance, TARGET, this.target);
+            U.putOrderedInt(instance, OFFSET, this.offset + (int) offset);
+            U.putOrderedInt(instance, SIZE, (int) size);
             return instance;
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
@@ -104,19 +107,130 @@ abstract class Packed {
     /**
      * Factory for copies of Packed instances.
      */
-    static <P extends Packed> P newCopy(PackedClass<P> packedClass, byte[] target, int offset, int size) {
+    final <P extends Packed> P getCopyU(PackedClass<P> type, long offset, long size) {
+        return getCopyU(type.asClass(), offset, size);
+    }
+
+    final <P extends Packed> P getCopyU(Class<P> clazz, long offset, long size) {
         try {
             @SuppressWarnings("unchecked")
-            P instance = (P) U.allocateInstance(packedClass.asClass());
+            P instance = (P) U.allocateInstance(clazz);
             U.putOrderedObject(instance, TARGET,
-                Arrays.copyOfRange(target, offset, offset + size));
+                Arrays.copyOfRange(target, this.offset + (int) offset, this.offset + (int) (offset + size)));
             // offset is by default 0
             // U.putOrderedInt(instance, OFFSET, 0);
-            U.putOrderedInt(instance, SIZE, size);
+            U.putOrderedInt(instance, SIZE, (int) size);
             return instance;
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Factory for PackedArray views.
+     */
+    final <PA extends PackedArray<?>> PA getArrayViewU(PackedClass<PA> arrayType, long offset, int length) {
+        return getArrayViewU(arrayType, offset, arrayType.arraySize(length), length);
+    }
+
+    final <PA extends PackedArray<?>> PA getArrayViewU(PackedClass<PA> arrayType, long offset, long size, int length) {
+        PA array = getViewU(arrayType, offset, size);
+        array.initLengthAndType(length, arrayType);
+        return array;
+    }
+
+    /**
+     * Factory for PackedArray copies.
+     */
+    final <PA extends PackedArray<?>> PA getArrayCopyU(PackedClass<PA> arrayType, long offset, int length) {
+        return getArrayCopyU(arrayType, offset, arrayType.arraySize(length), length);
+    }
+
+    final <PA extends PackedArray<?>> PA getArrayCopyU(PackedClass<PA> arrayType, long offset, long size, int length) {
+        PA array = getCopyU(arrayType, offset, size);
+        array.initLengthAndType(length, arrayType);
+        return array;
+    }
+
+    // low-level operations - unsafe and unchecked
+
+    private long unsafeOffset(long offset) {
+        return Unsafe.ARRAY_BYTE_BASE_OFFSET + this.offset + offset;
+    }
+
+    private long unsafeOffset() {
+        return Unsafe.ARRAY_BYTE_BASE_OFFSET + this.offset;
+    }
+
+    final boolean getBooleanU(long offset) {
+        return U.getBoolean(target, unsafeOffset(offset));
+    }
+
+    final void putBooleanU(long offset, boolean b) {
+        U.putBoolean(target, unsafeOffset(offset), b);
+    }
+
+    final byte getByteU(long offset) {
+        return U.getByte(target, unsafeOffset(offset));
+    }
+
+    final void putByteU(long offset, byte b) {
+        U.putByte(target, unsafeOffset(offset), b);
+    }
+
+    final char getCharU(long offset) {
+        return U.getChar(target, unsafeOffset(offset));
+    }
+
+    final void putCharU(long offset, char c) {
+        U.putChar(target, unsafeOffset(offset), c);
+    }
+
+    final short getShortU(long offset) {
+        return U.getShort(target, unsafeOffset(offset));
+    }
+
+    final void putShortU(long offset, short i) {
+        U.putShort(target, unsafeOffset(offset), i);
+    }
+
+    final int getIntU(long offset) {
+        return U.getInt(target, unsafeOffset(offset));
+    }
+
+    final void putIntU(long offset, int i) {
+        U.putInt(target, unsafeOffset(offset), i);
+    }
+
+    final long getLongU(long offset) {
+        return U.getLong(target, unsafeOffset(offset));
+    }
+
+    final void putLongU(long offset, long l) {
+        U.putLong(target, unsafeOffset(offset), l);
+    }
+
+    final float getFloatU(long offset) {
+        return U.getFloat(target, unsafeOffset(offset));
+    }
+
+    final void putFloatU(long offset, float v) {
+        U.putFloat(target, unsafeOffset(offset), v);
+    }
+
+    final double getDoubleU(long offset) {
+        return U.getDouble(target, unsafeOffset(offset));
+    }
+
+    final void putDoubleU(long offset, double v) {
+        U.putDouble(target, unsafeOffset(offset), v);
+    }
+
+    // copyFrom support
+
+    final void copyFromU(Packed source, long targetOffset, long targetSize) {
+        U.copyMemory(source.target, source.unsafeOffset(),
+            this.target, this.unsafeOffset(targetOffset), targetSize);
     }
 
     // Unsafe machinery

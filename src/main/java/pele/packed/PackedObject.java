@@ -14,7 +14,7 @@ import java.util.List;
 public class PackedObject extends Packed {
 
     /**
-     * Default constructor for "zero" packed objects.
+     * Default constructor for "zero" packed objects that obtain size from it's type.
      */
     public PackedObject() {
         super();
@@ -40,8 +40,7 @@ public class PackedObject extends Packed {
                 "Can only view the packed object as a " + getClass() +
                     " or it's superclass");
         }
-        PackedClass<T> type = PackedClass.forClass(clazz);
-        return Packed.newView(type, target, offset, type.getSize());
+        return getViewU(clazz, 0, PackedClass.forClass(clazz).getSize());
     }
 
     /**
@@ -57,8 +56,7 @@ public class PackedObject extends Packed {
                 "Can only copy the packed object as a " + getClass() +
                     " or it's superclass");
         }
-        PackedClass<T> type = PackedClass.forClass(clazz);
-        return Packed.newCopy(type, target, offset, type.getSize());
+        return getCopyU(clazz, 0, PackedClass.forClass(clazz).getSize());
     }
 
     /**
