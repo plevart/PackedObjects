@@ -260,7 +260,8 @@ public final class PackedClass<T> {
                     try {
                         PackedField<?, ?> pf = (PackedField<?, ?>) f.get(null);
                         // validate that home class is the same as the declaring class of static field
-                        if (pf.getHomeClass() != clazz) {
+                        // (don't use getter for homeClass since it's public and protected by checkBlessed())
+                        if (pf.homeClass != clazz) {
                             throw new ClassFormatError(
                                 "PackedField assigned to: " + f +
                                     " has invalid home class: " + pf.getHomeClass().getName());
