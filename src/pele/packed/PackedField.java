@@ -134,7 +134,7 @@ public abstract class PackedField<T, H extends PackedObject> {
                             }
                         }
                     } catch (IllegalAccessException e) {
-                        throw new Error(e);
+                        throw new InternalError(e);
                     }
                 }
             }

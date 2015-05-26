@@ -259,11 +259,17 @@ public final class PackedClass<T> {
                     f.setAccessible(true);
                     try {
                         PackedField<?, ?> pf = (PackedField<?, ?>) f.get(null);
+                        // validate that home class is the same as the declaring class of static field
+                        if (pf.getHomeClass() != clazz) {
+                            throw new ClassFormatError(
+                                "PackedField assigned to: " + f +
+                                    " has invalid home class: " + pf.getHomeClass().getName());
+                        }
                         // while we are iterating all fields, bless them at the same time...
                         pf.bless(f.getName(), f.getModifiers());
                         fields.add(pf);
                     } catch (IllegalAccessException e) {
-                        throw new Error(e);
+                        throw new InternalError(e);
                     }
                 }
             }

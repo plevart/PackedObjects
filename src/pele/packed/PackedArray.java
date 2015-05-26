@@ -608,7 +608,7 @@ public abstract class PackedArray<CT> extends Packed {
                 TYPE = U.objectFieldOffset(
                     PackedArray.OfObject.class.getDeclaredField("type"));
             } catch (Exception e) {
-                throw new Error(e);
+                throw new InternalError(e);
             }
         }
     }
@@ -649,7 +649,7 @@ public abstract class PackedArray<CT> extends Packed {
             LENGTH = U.objectFieldOffset(
                 PackedArray.class.getDeclaredField("length"));
         } catch (Exception e) {
-            throw new Error(e);
+            throw new InternalError(e);
         }
     }
 }

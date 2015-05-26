@@ -136,7 +136,7 @@ abstract class Packed {
             SIZE = U.objectFieldOffset(
                 Packed.class.getDeclaredField("size"));
         } catch (Exception e) {
-            throw new Error(e);
+            throw new InternalError(e);
         }
     }
 }
